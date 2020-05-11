@@ -1,0 +1,189 @@
+<template>
+	<view class="content"> 
+		<view class="device-msg-container">
+			<view class="device-msg">
+				<view class="device-msg-head">
+					<label class="device-label">接收消息：</label>
+					<radio-group class="device-msg-radio" @change="changeRecType">
+						<label class="uni-list-cell uni-list-cell-pd"  >
+							<radio  value="ASCII" :checked="select.recType === 'ASCII'"/>
+							<view>ASCII</view>
+						</label>
+						<label class="uni-list-cell uni-list-cell-pd"  >
+							<radio  value="Hex" :checked="select.recType === 'Hex'"/>
+							<view>Hex</view>
+						</label>
+					</radio-group>
+				</view>
+				<textarea v-model="recText" class="device-msg-content"></textarea> 
+			</view> 
+			<view class="device-msg">
+				<view class="device-msg-head">
+					<label class="device-label">发送消息：</label>
+					<radio-group class="device-msg-radio" @change="changeSendType">
+						<label class="uni-list-cell uni-list-cell-pd"  >
+							<radio  value="ASCII" :checked="select.sendType === 'ASCII'"/>
+							<view>ASCII</view>
+						</label>
+						<label class="uni-list-cell uni-list-cell-pd"  >
+							<radio  value="Hex" :checked="select.sendType === 'Hex'"/>
+							<view>Hex</view>
+						</label>
+					</radio-group>
+				</view>
+				<textarea v-model="sendText" class="device-msg-content"></textarea> 
+				<button  @click="send">发送</button>
+			</view>  
+		</view>
+		<uni-drawer ref="configDrawer" :visible="configDrawer" mode="right" @change="changeDrawer">
+		    <view class="device-config">
+		    	<view class="uni-list">
+		    		<view class="uni-list-cell">
+		    			<picker class="uni-list-cell-picker"  mode="selector" :range="list.device" :value="select.device" @change="changeDeivce">
+		    				<label class="uni-list-cell-label">设备列表</label>
+							<view class="uni-input">{{list.device[select.device]}}</view>
+		    			</picker>
+		    		</view>
+		    	</view>
+		    	<view class="uni-list">
+		    		<view class="uni-list-cell"> 
+		    			<picker class="uni-list-cell-picker" :disabled="isOpen" mode="selector" :range="list.baudRate" :value="select.baudRate" @change="changeBaudRate">
+		    			 	<label class="uni-list-cell-label">波特率</label>
+							<view class="uni-input">{{list.baudRate[select.baudRate]}}</view>
+		    			</picker>
+		    		</view>
+		    	</view>
+		    	<button v-if="!isOpen" @click="open">打开串口并监听数据</button>
+		    	<button v-else @click="close">关闭串口</button>
+		    </view>
+		</uni-drawer>
+	</view>
+</template>
+
+<script>
+	import uniDrawer from "@/components/uni-drawer/uni-drawer.vue"
+	const serialPort = uni.requireNativePlugin('Fvv-UniSerialPort') 
+	export default {
+		components:{uniDrawer},
+		data() {
+			return { 
+				configDrawer:false,
+				list:{
+					device:[],
+					baudRate:[9600,115200],
+				} ,
+				select:{
+					device:0,
+					baudRate:0,
+					recType:"ASCII",
+					sendType:"ASCII",
+				},
+				isOpen:false, 
+				recText:"",
+				sendText:""
+			}
+		}, 
+		onNavigationBarButtonTap(e){
+			this.$refs.configDrawer.open()
+		},
+		methods: {
+			//获取所有设备路径
+			getDevices(){
+				serialPort.getAllDevicePath(res => {
+					this.list.device = res 
+				})
+			},
+			//改变设备
+			changeDeivce(e){ 
+				this.select.device = e.detail.value
+			},
+			//改变波特率
+			changeBaudRate(e){
+				this.select.baudRate = e.detail.value
+			},
+			addMessage(type,msg){
+				this.recText += (type === 'rec'?"→":"←") + msg + "\r\n";
+			},
+			//监听数据
+			onMessage(){
+				if(this.select.recType === 'ASCII'){
+					serialPort.onMessageASCII(rec => {
+						this.addMessage("rec",rec)
+					},send => {
+						this.addMessage("send",send)
+					})
+				}
+				if(this.select.recType === 'Hex'){
+					serialPort.onMessageHex(rec => {
+						this.addMessage("rec",rec)
+					},send => {
+						this.addMessage("send",send)
+					})
+				}
+				
+			},
+			//关闭串口
+			close(){
+				serialPort.close()
+				this.isOpen = false
+			},
+			//打开串口
+			open(){
+				serialPort.setPath(this.list.device[this.select.device])
+				serialPort.setBaudRate(this.list.baudRate[this.select.baudRate]) 
+				serialPort.open(res => { 
+					if(!res.status){
+						uni.showToast({
+						    title: res.msg,
+						    duration: 2000,
+							icon:"none"
+						}); 
+						return
+					}  
+					uni.showToast({
+					    title: "已打开",
+					    duration: 2000, 
+					});
+					this.onMessage()
+					this.isOpen = true
+					this.$refs.configDrawer.close()
+				})
+			},
+			//发送消息
+			send(){   
+				if(!this.isOpen){
+					this.$refs.configDrawer.open()
+					return
+				}
+				if(this.select.sendType === 'ASCII'){
+					serialPort.sendASCII(this.sendText)
+				}
+				if(this.select.sendType === 'Hex'){
+					serialPort.sendHex(this.sendText)
+				}
+			},
+			changeRecType(e){
+				this.select.recType = e.detail.value 
+				this.onMessage()
+			},
+			changeSendType(e){
+				this.select.sendType = e.detail.value  
+			},  
+		},
+		mounted() { 
+			this.getDevices()
+			this.$refs.configDrawer.open()
+		}
+	}
+</script>
+
+<style  > 
+	.content{ flex:1;}
+	.uni-list-cell{flex-direction: row;}
+	.uni-list-cell-picker{flex-direction: row;justify-content: space-between;flex:1;padding: 20rpx;}
+	.device-msg-container{flex:1;}
+	.device-msg{ flex:1;} 
+	.device-msg-head{background-color: #efefef;flex-direction: row;justify-content: space-between;padding: 10rpx;}
+	.device-msg-radio{flex-direction: row; }
+	.device-msg-content{flex:1;padding: 10rpx;} 
+</style>

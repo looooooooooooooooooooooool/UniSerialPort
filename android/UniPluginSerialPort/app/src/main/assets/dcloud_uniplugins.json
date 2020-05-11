@@ -1,0 +1,13 @@
+{
+  "nativePlugins": [
+    {
+      "plugins": [
+        {
+          "type": "module",
+          "name": "Fvv-UniSerialPort",
+          "class": "uni.fvv.serialport.UniSerialPort"
+        }
+      ]
+    }
+  ]
+}

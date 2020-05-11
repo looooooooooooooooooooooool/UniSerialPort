@@ -1,0 +1,20 @@
+{
+    "name": "UniSerialPort",
+    "id": "Fvv-UniSerialPort",
+    "version": "1.0.0",
+    "description": "安卓串口通讯",
+    "_dp_type":"nativeplugin",
+    "_dp_nativeplugin":{
+        "android": {
+            "plugins": [
+                {
+                    "type": "module",
+                    "name": "Fvv-UniSerialPort",
+                    "class": "uni.fvv.serialport.UniSerialPort"
+                }
+            ],
+			"integrateType": "aar",
+            "minSdkVersion": "17"
+        }
+    }
+}

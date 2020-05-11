@@ -1,0 +1,3 @@
+rootProject.name='UniPlugin-SerialPort'
+include ':app'
+include ':serialport'
