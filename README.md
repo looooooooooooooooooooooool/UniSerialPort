@@ -231,7 +231,7 @@ callback(object)
 示例
 ```javascript
 serialPort.open(res => {
-	console.log(res) //设备列表
+	console.log(res) 
 })
 ```
 <p>　</p>  
