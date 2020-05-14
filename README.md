@@ -429,3 +429,14 @@ serialPort.sendASCII("hello Fvv")
 
 [Android uni-app原生插件开发教程](https://nativesupport.dcloud.net.cn/NativePlugin/course/android)  
 
+
+<p>　</p>  
+
+## 打赏作者
+
+如果你觉得这个项目帮助到了你，你可以帮作者买一包辣条或一顿快餐表示鼓励 
+ 
+<img width="140" src="https://fvvfww.cn/wechat.png">
+
+<img width="140" src="https://fvvfww.cn/alipay.png">
+
